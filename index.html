@@ -37,22 +37,49 @@
             display: block;
             margin: 10px 0;
         }
+        .circle-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .circle-name {
+            padding: 10px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 50%;
+        }
+        #toggleAllButton {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
 <h1>Random Circle Generator</h1>
 
-<!-- Input for adding new names -->
-<input type="text" id="newName" placeholder="Add new name">
-<button id="addNameButton">Add Name</button>
+<!-- Checkbox for Output Style -->
+<label>
+    <input type="checkbox" id="outputStyle"> Output as Circle Diagram
+</label>
+
+<!-- Button to generate list -->
+<button id="generateButton" disabled>Generate Circle</button>
+
+<!-- Toggle Select/Unselect all -->
+<button id="toggleAllButton">Unselect All</button>
 
 <!-- Checkboxes for names -->
 <div class="checkbox-container" id="checkboxContainer"></div>
 
-<button id="generateButton" disabled>Generate Circle</button>
-
+<!-- Output Section -->
 <div class="output" id="output"></div>
+
+<!-- Input for adding new names -->
+<input type="text" id="newName" placeholder="Add new name">
+<button id="addNameButton">Add Name</button>
 
 <script>
     // Predefined list of names
@@ -61,6 +88,8 @@
         "Jara", "Lars", "Luca", "Malin", "Mark", "Marko", "Matti", "Melisa", 
         "Nelio", "Nikitas", "Nils", "Nora", "Seth", "Sophie", "Vincent", "Zakaria"
     ];
+
+    let selectAll = false;  // Track if all names are selected or unselected
 
     // Load names from cookie if available, otherwise use predefined names
     let names = getCookie("selectedNames") ? JSON.parse(getCookie("selectedNames")) : predefinedNames;
@@ -97,13 +126,24 @@
         }
     });
 
+    // Toggle Select/Unselect All button
+    document.getElementById('toggleAllButton').addEventListener('click', function () {
+        const checkboxes = document.querySelectorAll('#checkboxContainer input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !selectAll;
+        });
+        selectAll = !selectAll;
+        document.getElementById('toggleAllButton').textContent = selectAll ? 'Unselect All' : 'Select All';
+    });
+
     // Generate random circle when the button is clicked
     document.getElementById('generateButton').addEventListener('click', function () {
         const selectedNames = Array.from(document.querySelectorAll('#checkboxContainer input[type="checkbox"]:checked'))
                                   .map(checkbox => checkbox.value);
         if (selectedNames.length > 1) {
             const circle = randomizeCircle(selectedNames);
-            displayCircle(circle);
+            const outputAsCircle = document.getElementById('outputStyle').checked;
+            displayCircle(circle, outputAsCircle);
             setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save selected names in cookie
         } else {
             document.getElementById('output').innerHTML = 'Please select at least 2 names.';
@@ -123,13 +163,27 @@
         }));
     }
 
-    // Display the random circle
-    function displayCircle(circle) {
+    // Display the circle or list
+    function displayCircle(circle, asCircleDiagram) {
         const outputDiv = document.getElementById('output');
-        outputDiv.innerHTML = '<strong>Circular arrangement of names with followers:</strong><br/><br/>';
-        circle.forEach(pair => {
-            outputDiv.innerHTML += `${pair.person} -> ${pair.follower}<br/>`;
-        });
+        outputDiv.innerHTML = ''; // Clear previous output
+
+        if (asCircleDiagram) {
+            const diagramDiv = document.createElement('div');
+            diagramDiv.classList.add('circle-diagram');
+            circle.forEach(pair => {
+                const circleName = document.createElement('div');
+                circleName.classList.add('circle-name');
+                circleName.textContent = pair.person;
+                diagramDiv.appendChild(circleName);
+            });
+            outputDiv.appendChild(diagramDiv);
+        } else {
+            outputDiv.innerHTML = '<strong>Circular arrangement of names with followers:</strong><br/><br/>';
+            circle.forEach(pair => {
+                outputDiv.innerHTML += `${pair.person} -> ${pair.follower}<br/>`;
+            });
+        }
     }
 
     // Cookie functions
