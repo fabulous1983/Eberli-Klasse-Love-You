@@ -20,22 +20,23 @@
             margin-right: 10px;
         }
         #generateButton {
-    padding: 15px 30px; /* Larger padding */
-    margin: 20px;
-    font-size: 18px; /* Larger font */
-    background-color: #2E7D32; /* Matching the theme with the green used in the circles */
-    color: white; /* White text to contrast the green background */
-    border: none; /* Remove border */
-    border-radius: 8px; /* Rounded corners */
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for depth */
-    transition: transform 0.2s, box-shadow 0.2s; /* Smooth animation for hover effects */
-}
+            padding: 15px 30px; /* Larger padding */
+            margin: 20px;
+            font-size: 18px; /* Larger font */
+            background-color: #2E7D32; /* Darker green */
+            color: white; /* White text for contrast */
+            border: none; /* Remove border */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            transition: transform 0.2s, box-shadow 0.2s; /* Smooth hover effects */
+            cursor: pointer; /* Pointer cursor on hover */
+        }
 
-#generateButton:hover {
-    transform: scale(1.05); /* Slightly enlarges on hover */
-    box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.2); /* Deepen shadow on hover */
-    background-color: #1B5E20; /* Even darker green on hover */
-}
+        #generateButton:hover {
+            transform: scale(1.05); /* Slightly enlarges on hover */
+            box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.2); /* Deepen shadow on hover */
+            background-color: #1B5E20; /* Even darker green on hover */
+        }
 
         .output {
             margin-top: 20px;
@@ -76,10 +77,21 @@
         }
         #toggleAllButton {
             margin-bottom: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #757575;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #toggleAllButton:hover {
+            background-color: #616161;
         }
         #circleCanvas {
             margin-top: 20px;
         }
+        
     </style>
 </head>
 <body>
@@ -106,7 +118,6 @@
 <!-- Grid of name buttons -->
 <div class="name-grid" id="nameGrid"></div>
 
-
 <!-- Input for adding new names -->
 <input type="text" id="newName" placeholder="Add new name">
 <button id="addNameButton">Add Name</button>
@@ -118,14 +129,35 @@
 <canvas id="circleCanvas" width="600" height="600" style="display: none;"></canvas>
 
 <script>
-    const predefinedNames = [
-        "Adam", "Akalya", "Andu", "Alvaro", "Anik", "Carlo", "Fabian", "Isadora", 
-        "Jara", "Lars", "Luca", "Malin", "Mark", "Marko", "Matti", "Melisa", 
-        "Nelio", "Nikitas", "Nils", "Nora", "Seth", "Sophie", "Vincent", "Zakaria"
-    ];
+    // Cookie functions
+    function setCookie(name, value, days) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + d.toUTCString();
+        document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+    }
 
-    let selectAll = true;
-    let selectedNames = getCookie("selectedNames") ? JSON.parse(getCookie("selectedNames")) : predefinedNames;
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i].trim();
+            if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+        }
+        return null;
+    }
+
+    // Initialize predefinedNames from cookie or use default list
+    let predefinedNames = getCookie("predefinedNames") 
+        ? JSON.parse(getCookie("predefinedNames")) 
+        : ["Adam", "Akalya", "Andu", "Alvaro", "Anik", "Carlo", "Fabian", "Isadora", 
+           "Jara", "Lars", "Luca", "Malin", "Mark", "Marko", "Matti", "Melisa", 
+           "Nelio", "Nikitas", "Nils", "Nora", "Seth", "Sophie", "Vincent", "Zakaria"];
+
+    // Initialize selectedNames from cookie or use all predefinedNames
+    let selectedNames = getCookie("selectedNames") ? JSON.parse(getCookie("selectedNames")) : [...predefinedNames];
+
+    let selectAll = true; // Initialize as true for first toggle
 
     // Display buttons for name selection
     function displayNames(names) {
@@ -155,6 +187,7 @@
             button.classList.add('selected');
             selectedNames.push(name);
         }
+        setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save updated selections
     }
 
     // Display names on page load
@@ -163,11 +196,13 @@
     // Add a new name to the list
     document.getElementById('addNameButton').addEventListener('click', function () {
         const newName = document.getElementById('newName').value.trim();
-        if (newName && !selectedNames.includes(newName)) {
-            predefinedNames.push(newName);
-            selectedNames.push(newName);
+        if (newName && !predefinedNames.includes(newName)) {
+            predefinedNames.push(newName); // Add to predefinedNames
+            selectedNames.push(newName);   // Add to selectedNames
             displayNames(predefinedNames);
             document.getElementById('newName').value = ''; // Clear input field
+            setCookie("predefinedNames", JSON.stringify(predefinedNames), 365); // Save updated predefinedNames
+            setCookie("selectedNames", JSON.stringify(selectedNames), 365);     // Save updated selectedNames
         }
     });
 
@@ -182,6 +217,7 @@
             }
         });
         selectedNames = selectAll ? [] : [...predefinedNames];
+        setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save updated selectedNames
         selectAll = !selectAll;
         document.getElementById('toggleAllButton').textContent = selectAll ? 'Unselect All' : 'Select All';
     });
@@ -194,11 +230,33 @@
             const outputList = document.getElementById('outputList').checked;
             if (outputCircle) displayCircle(circle);
             if (outputList) displayList(circle);
-            setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save selected names in cookie
+            setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save selectedNames
         } else {
             document.getElementById('output').innerHTML = 'Please select at least 2 names.';
         }
     });
+
+    // Handle changes to the Circle Diagram checkbox
+document.getElementById('outputCircle').addEventListener('change', function() {
+    const canvas = document.getElementById('circleCanvas');
+    if (this.checked) {
+        canvas.style.display = 'block'; // Show the canvas if checked
+    } else {
+        canvas.style.display = 'none'; // Hide the canvas if unchecked
+    }
+});
+
+// Handle changes to the List checkbox
+document.getElementById('outputList').addEventListener('change', function() {
+    const outputDiv = document.getElementById('output');
+    if (this.checked) {
+        // Optionally, you can regenerate the list here if desired
+        // For simplicity, we'll require the user to click "Play" again to regenerate
+    } else {
+        outputDiv.innerHTML = ''; // Clear the list if unchecked
+    }
+});
+
 
     // Randomize the circle
     function randomizeCircle(names) {
@@ -223,17 +281,17 @@
         const centerY = canvas.height / 2;
         const radius = 250; // Circle radius
         const circleRadius = 30; // Radius of each name circle
-        
+
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-        
+
         // Calculate angles for each name
         const angleStep = (2 * Math.PI) / circle.length;
-        
+
         // Helper function to draw arrows that stop at the edge of the circle
         function drawArrow(fromX, fromY, toX, toY) {
             const headlen = 10; // length of arrowhead
             const angle = Math.atan2(toY - fromY, toX - fromX);
-            
+
             // Adjust the endpoints so the line touches the circle's circumference, not center
             const adjustedFromX = fromX + circleRadius * Math.cos(angle);
             const adjustedFromY = fromY + circleRadius * Math.sin(angle);
@@ -247,7 +305,7 @@
             ctx.strokeStyle = '#000000';
             ctx.lineWidth = 2;
             ctx.stroke();
-            
+
             // Draw arrowhead
             ctx.beginPath();
             ctx.moveTo(adjustedToX, adjustedToY);
@@ -263,7 +321,7 @@
             const x = centerX + radius * Math.cos(angle);
             const y = centerY + radius * Math.sin(angle);
             
-            // Draw the name circle
+            // Draw the name circle without border
             ctx.beginPath();
             ctx.arc(x, y, circleRadius, 0, 2 * Math.PI, false); 
             ctx.fillStyle = '#4CAF50';
@@ -293,25 +351,6 @@
         circle.forEach(pair => {
             outputDiv.innerHTML += `${pair.person} -> ${pair.follower}<br/>`;
         });
-    }
-
-    // Cookie functions
-    function setCookie(name, value, days) {
-        const d = new Date();
-        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-        const expires = "expires=" + d.toUTCString();
-        document.cookie = name + "=" + value + ";" + expires + ";path=/";
-    }
-
-    function getCookie(name) {
-        const nameEQ = name + "=";
-        const ca = document.cookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
     }
 </script>
 
