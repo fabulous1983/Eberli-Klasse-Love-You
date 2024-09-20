@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Circle Generator</title>
+    <title>I love you but you are dead...</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,23 +19,46 @@
             padding: 5px;
             margin-right: 10px;
         }
-        button {
-            padding: 10px 20px;
-            margin: 10px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+        #generateButton {
+    padding: 15px 30px; /* Larger padding */
+    margin: 20px;
+    font-size: 18px; /* Larger font */
+    background-color: #2E7D32; /* Matching the theme with the green used in the circles */
+    color: white; /* White text to contrast the green background */
+    border: none; /* Remove border */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for depth */
+    transition: transform 0.2s, box-shadow 0.2s; /* Smooth animation for hover effects */
+}
+
+#generateButton:hover {
+    transform: scale(1.05); /* Slightly enlarges on hover */
+    box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.2); /* Deepen shadow on hover */
+    background-color: #1B5E20; /* Even darker green on hover */
+}
+
         .output {
             margin-top: 20px;
             font-size: 18px;
         }
-        .checkbox-container {
+        .name-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            max-width: 600px;
             margin: 20px auto;
-            max-width: 400px;
         }
-        .checkbox-container label {
-            display: block;
-            margin: 10px 0;
+        .name-button {
+            padding: 10px;
+            background-color: grey;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .name-button.selected {
+            background-color: #4CAF50;
         }
         .circle-diagram {
             display: flex;
@@ -54,101 +77,123 @@
         #toggleAllButton {
             margin-bottom: 20px;
         }
+        #circleCanvas {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Canvas for drawing the circle diagram -->
+<h1>I love you but you are dead...</h1>
 
-<canvas id="circleCanvas" width="600" height="600" style="display: none;"></canvas>
-
-<h1>Random Circle Generator</h1>
-
-<!-- Checkbox for Output Style -->
-<label>
-    <input type="checkbox" id="outputStyle" checked> Output as Circle Diagram
-</label>
+<!-- Show both Circle and List options always -->
+<div>
+    <strong>Output Style: </strong>
+    <label>
+        <input type="checkbox" id="outputCircle" checked> Circle Diagram
+    </label>
+    <label>
+        <input type="checkbox" id="outputList" checked> List
+    </label>
+</div>
 
 <!-- Button to generate list -->
-<button id="generateButton" disabled>Generate Circle</button>
+<button id="generateButton" disabled>Play</button>
 
 <!-- Toggle Select/Unselect all -->
 <button id="toggleAllButton">Unselect All</button>
 
-<!-- Checkboxes for names -->
-<div class="checkbox-container" id="checkboxContainer"></div>
+<!-- Grid of name buttons -->
+<div class="name-grid" id="nameGrid"></div>
 
-<!-- Output Section -->
-<div class="output" id="output"></div>
 
 <!-- Input for adding new names -->
 <input type="text" id="newName" placeholder="Add new name">
 <button id="addNameButton">Add Name</button>
 
+<!-- Output Section -->
+<div class="output" id="output"></div>
+
+<!-- Canvas for Circle Diagram -->
+<canvas id="circleCanvas" width="600" height="600" style="display: none;"></canvas>
+
 <script>
-    // Predefined list of names
     const predefinedNames = [
         "Adam", "Akalya", "Andu", "Alvaro", "Anik", "Carlo", "Fabian", "Isadora", 
         "Jara", "Lars", "Luca", "Malin", "Mark", "Marko", "Matti", "Melisa", 
         "Nelio", "Nikitas", "Nils", "Nora", "Seth", "Sophie", "Vincent", "Zakaria"
     ];
 
-    let selectAll = false;  // Track if all names are selected or unselected
+    let selectAll = true;
+    let selectedNames = getCookie("selectedNames") ? JSON.parse(getCookie("selectedNames")) : predefinedNames;
 
-    // Load names from cookie if available, otherwise use predefined names
-    let names = getCookie("selectedNames") ? JSON.parse(getCookie("selectedNames")) : predefinedNames;
+    // Display buttons for name selection
+    function displayNames(names) {
+        const grid = document.getElementById('nameGrid');
+        grid.innerHTML = ''; // Clear previous content
 
-   // Function to display checkboxes for names
-function displayCheckboxes(names) {
-    const container = document.getElementById('checkboxContainer');
-    container.innerHTML = ''; // Clear previous content
+        names.forEach(name => {
+            const button = document.createElement('button');
+            button.className = 'name-button';
+            button.textContent = name;
+            if (selectedNames.includes(name)) {
+                button.classList.add('selected');
+            }
+            button.addEventListener('click', () => toggleSelection(button, name));
+            grid.appendChild(button);
+        });
 
-    names.forEach(name => {
-        const label = document.createElement('label');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.value = name;
-        checkbox.checked = true; // Default all names to be checked
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(name));
-        container.appendChild(label);
-    });
+        document.getElementById('generateButton').disabled = false;
+    }
 
-    document.getElementById('generateButton').disabled = false; // Enable the button
-}
+    // Toggle selection of name
+    function toggleSelection(button, name) {
+        if (button.classList.contains('selected')) {
+            button.classList.remove('selected');
+            selectedNames = selectedNames.filter(n => n !== name);
+        } else {
+            button.classList.add('selected');
+            selectedNames.push(name);
+        }
+    }
 
-
-    // Display checkboxes on page load
-    displayCheckboxes(names);
+    // Display names on page load
+    displayNames(predefinedNames);
 
     // Add a new name to the list
     document.getElementById('addNameButton').addEventListener('click', function () {
         const newName = document.getElementById('newName').value.trim();
-        if (newName) {
-            names.push(newName);
-            displayCheckboxes(names);
+        if (newName && !selectedNames.includes(newName)) {
+            predefinedNames.push(newName);
+            selectedNames.push(newName);
+            displayNames(predefinedNames);
             document.getElementById('newName').value = ''; // Clear input field
         }
     });
 
     // Toggle Select/Unselect All button
     document.getElementById('toggleAllButton').addEventListener('click', function () {
-        const checkboxes = document.querySelectorAll('#checkboxContainer input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = !selectAll;
+        const buttons = document.querySelectorAll('.name-button');
+        buttons.forEach(button => {
+            if (selectAll) {
+                button.classList.remove('selected');
+            } else {
+                button.classList.add('selected');
+            }
         });
+        selectedNames = selectAll ? [] : [...predefinedNames];
         selectAll = !selectAll;
         document.getElementById('toggleAllButton').textContent = selectAll ? 'Unselect All' : 'Select All';
     });
 
-    // Generate random circle when the button is clicked
+    // Generate random circle or list
     document.getElementById('generateButton').addEventListener('click', function () {
-        const selectedNames = Array.from(document.querySelectorAll('#checkboxContainer input[type="checkbox"]:checked'))
-                                  .map(checkbox => checkbox.value);
         if (selectedNames.length > 1) {
             const circle = randomizeCircle(selectedNames);
-            const outputAsCircle = document.getElementById('outputStyle').checked;
-            displayCircle(circle, outputAsCircle);
+            const outputCircle = document.getElementById('outputCircle').checked;
+            const outputList = document.getElementById('outputList').checked;
+            if (outputCircle) displayCircle(circle);
+            if (outputList) displayList(circle);
             setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save selected names in cookie
         } else {
             document.getElementById('output').innerHTML = 'Please select at least 2 names.';
@@ -168,19 +213,15 @@ function displayCheckboxes(names) {
         }));
     }
 
-   // Display the circle or list
-function displayCircle(circle, asCircleDiagram) {
-    const outputDiv = document.getElementById('output');
-    const canvas = document.getElementById('circleCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    if (asCircleDiagram) {
-        canvas.style.display = 'block';
-        outputDiv.innerHTML = ''; // Clear previous output
-        
+    // Display the circle diagram
+    function displayCircle(circle) {
+        const canvas = document.getElementById('circleCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.style.display = 'block'; // Show canvas
+
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        const radius = 250; // Circle radius, increased for larger names
+        const radius = 250; // Circle radius
         const circleRadius = 30; // Radius of each name circle
         
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
@@ -224,16 +265,13 @@ function displayCircle(circle, asCircleDiagram) {
             
             // Draw the name circle
             ctx.beginPath();
-            ctx.arc(x, y, circleRadius, 0, 2 * Math.PI, false); // Increased size of circles for larger text
+            ctx.arc(x, y, circleRadius, 0, 2 * Math.PI, false); 
             ctx.fillStyle = '#4CAF50';
             ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#003300';
-            ctx.stroke();
             
             // Draw the name inside the circle
             ctx.fillStyle = 'white';
-            ctx.font = '16px Arial'; // Increased font size for readability
+            ctx.font = '16px Arial'; 
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(pair.person, x, y);
@@ -246,16 +284,16 @@ function displayCircle(circle, asCircleDiagram) {
             // Draw arrow from current circle to next circle
             drawArrow(x, y, nextX, nextY);
         });
-    } else {
-        canvas.style.display = 'none';
+    }
+
+    // Display the list
+    function displayList(circle) {
+        const outputDiv = document.getElementById('output');
         outputDiv.innerHTML = '<strong>List of names with followers:</strong><br/><br/>';
         circle.forEach(pair => {
             outputDiv.innerHTML += `${pair.person} -> ${pair.follower}<br/>`;
         });
     }
-}
-
-
 
     // Cookie functions
     function setCookie(name, value, days) {
