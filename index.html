@@ -10,18 +10,29 @@
             margin: 0;
             padding: 20px;
             background-color: #f0f0f0;
+            font-size: 18px; /* Set base font size */
         }
         h1 {
             text-align: center;
+            font-size: 2em; /* Larger font for the title */
         }
-        input[type="text"] {
+        input[type="text"], input[type="email"] {
             width: 200px;
             padding: 5px;
             margin-right: 10px;
+            font-size: 18px; /* Match base font size */
         }
+        /* Container for buttons to align them on the same line */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        /* Play Button Styling */
         #generateButton {
             padding: 15px 30px; /* Larger padding */
-            margin: 20px;
             font-size: 18px; /* Larger font */
             background-color: #2E7D32; /* Darker green */
             color: white; /* White text for contrast */
@@ -30,6 +41,7 @@
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
             transition: transform 0.2s, box-shadow 0.2s; /* Smooth hover effects */
             cursor: pointer; /* Pointer cursor on hover */
+            flex: 1; /* Make it flexible */
         }
 
         #generateButton:hover {
@@ -38,9 +50,49 @@
             background-color: #1B5E20; /* Even darker green on hover */
         }
 
+        /* Reset Button Styling */
+        #resetButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #9E9E9E; /* Grey color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            flex: 1; /* Make it flexible */
+        }
+
+        #resetButton:hover {
+            background-color: #757575; /* Darker grey on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+        }
+
+        /* Unselect All Button Styling */
+        #toggleAllButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #757575; /* Grey color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            flex: 1; /* Make it flexible */
+        }
+
+        #toggleAllButton:hover {
+            background-color: #616161; /* Darker grey on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+        }
+
+        /* Send Section Hidden (Removed Email and WhatsApp) */
+        /* No changes needed as email and WhatsApp sections are removed */
+
         .output {
             margin-top: 20px;
-            font-size: 18px;
+            font-size: 18px; /* Match base font size */
+            white-space: pre-wrap; /* Preserve newlines */
         }
         .name-grid {
             display: grid;
@@ -48,6 +100,7 @@
             gap: 10px;
             max-width: 600px;
             margin: 20px auto;
+            font-size: 18px; /* Match base font size */
         }
         .name-button {
             padding: 10px;
@@ -57,6 +110,7 @@
             border-radius: 5px;
             cursor: pointer;
             text-align: center;
+            font-size: 18px; /* Match base font size */
         }
         .name-button.selected {
             background-color: #4CAF50;
@@ -74,24 +128,11 @@
             background-color: #4CAF50;
             color: white;
             border-radius: 50%;
-        }
-        #toggleAllButton {
-            margin-bottom: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #757575;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #toggleAllButton:hover {
-            background-color: #616161;
+            font-size: 18px; /* Match base font size */
         }
         #circleCanvas {
             margin-top: 20px;
         }
-        
     </style>
 </head>
 <body>
@@ -99,28 +140,31 @@
 <h1>I love you but you are dead...</h1>
 
 <!-- Show both Circle and List options always -->
-<div>
+<div style="text-align: center; margin-top: 20px; font-size: 18px;">
     <strong>Output Style: </strong>
     <label>
         <input type="checkbox" id="outputCircle" checked> Circle Diagram
     </label>
-    <label>
+    <label style="margin-left: 20px;">
         <input type="checkbox" id="outputList" checked> List
     </label>
 </div>
 
-<!-- Button to generate list -->
-<button id="generateButton" disabled>Play</button>
-
-<!-- Toggle Select/Unselect all -->
-<button id="toggleAllButton">Unselect All</button>
+<!-- Button Container for Play, Unselect All, and Reset Buttons -->
+<div class="button-container">
+    <button id="generateButton" disabled>Play</button>
+    <button id="toggleAllButton">Unselect All</button>
+    <button id="resetButton">Reset</button>
+</div>
 
 <!-- Grid of name buttons -->
 <div class="name-grid" id="nameGrid"></div>
 
 <!-- Input for adding new names -->
-<input type="text" id="newName" placeholder="Add new name">
-<button id="addNameButton">Add Name</button>
+<div style="text-align: center; margin-top: 20px;">
+    <input type="text" id="newName" placeholder="Add new name">
+    <button id="addNameButton" style="padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Add Name</button>
+</div>
 
 <!-- Output Section -->
 <div class="output" id="output"></div>
@@ -154,8 +198,14 @@
            "Jara", "Lars", "Luca", "Malin", "Mark", "Marko", "Matti", "Melisa", 
            "Nelio", "Nikitas", "Nils", "Nora", "Seth", "Sophie", "Vincent", "Zakaria"];
 
-    // Initialize selectedNames from cookie or use all predefinedNames
-    let selectedNames = getCookie("selectedNames") ? JSON.parse(getCookie("selectedNames")) : [...predefinedNames];
+    // Initialize addedNames from cookie or use empty list
+    let addedNames = getCookie("addedNames") ? JSON.parse(getCookie("addedNames")) : [];
+
+    // Combine predefined and added names for selection
+    let allNames = [...predefinedNames, ...addedNames];
+
+    // Initialize selectedNames from cookie or use allNames
+    let selectedNames = getCookie("selectedNames") ? JSON.parse(getCookie("selectedNames")) : [...allNames];
 
     let selectAll = true; // Initialize as true for first toggle
 
@@ -191,18 +241,35 @@
     }
 
     // Display names on page load
-    displayNames(predefinedNames);
+    displayNames(allNames);
 
     // Add a new name to the list
     document.getElementById('addNameButton').addEventListener('click', function () {
         const newName = document.getElementById('newName').value.trim();
-        if (newName && !predefinedNames.includes(newName)) {
-            predefinedNames.push(newName); // Add to predefinedNames
+        if (newName && !allNames.includes(newName)) {
+            addedNames.push(newName); // Add to addedNames
+            predefinedNames.push(newName); // Optionally, if you want to treat added names as predefined
             selectedNames.push(newName);   // Add to selectedNames
-            displayNames(predefinedNames);
+            allNames = [...predefinedNames, ...addedNames]; // Update allNames
+            displayNames(allNames);
             document.getElementById('newName').value = ''; // Clear input field
+            setCookie("addedNames", JSON.stringify(addedNames), 365); // Save updated addedNames
             setCookie("predefinedNames", JSON.stringify(predefinedNames), 365); // Save updated predefinedNames
             setCookie("selectedNames", JSON.stringify(selectedNames), 365);     // Save updated selectedNames
+        }
+    });
+
+    // Reset Button Functionality
+    document.getElementById('resetButton').addEventListener('click', function () {
+        const confirmReset = confirm("Are you sure you want to reset? This will remove all newly added names.");
+        if (confirmReset) {
+            addedNames = []; // Clear added names
+            allNames = [...predefinedNames, ...addedNames]; // Update allNames
+            selectedNames = [...predefinedNames]; // Reset selectedNames to predefined
+            displayNames(allNames);
+            setCookie("addedNames", JSON.stringify(addedNames), 365); // Update addedNames cookie
+            setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Update selectedNames cookie
+            alert("All newly added names have been removed.");
         }
     });
 
@@ -216,7 +283,7 @@
                 button.classList.add('selected');
             }
         });
-        selectedNames = selectAll ? [] : [...predefinedNames];
+        selectedNames = selectAll ? [] : [...allNames];
         setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save updated selectedNames
         selectAll = !selectAll;
         document.getElementById('toggleAllButton').textContent = selectAll ? 'Unselect All' : 'Select All';
@@ -229,34 +296,54 @@
             const outputCircle = document.getElementById('outputCircle').checked;
             const outputList = document.getElementById('outputList').checked;
             if (outputCircle) displayCircle(circle);
+            else hideCircle();
             if (outputList) displayList(circle);
+            else hideList();
             setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save selectedNames
         } else {
-            document.getElementById('output').innerHTML = 'Please select at least 2 names.';
+            alert('Please select at least 2 names.');
         }
     });
 
+    // Function to hide the circle diagram
+    function hideCircle() {
+        const canvas = document.getElementById('circleCanvas');
+        canvas.style.display = 'none';
+    }
+
+    // Function to hide the list
+    function hideList() {
+        const outputDiv = document.getElementById('output');
+        outputDiv.innerHTML = '';
+    }
+
     // Handle changes to the Circle Diagram checkbox
-document.getElementById('outputCircle').addEventListener('change', function() {
-    const canvas = document.getElementById('circleCanvas');
-    if (this.checked) {
-        canvas.style.display = 'block'; // Show the canvas if checked
-    } else {
-        canvas.style.display = 'none'; // Hide the canvas if unchecked
-    }
-});
+    document.getElementById('outputCircle').addEventListener('change', function() {
+        const canvas = document.getElementById('circleCanvas');
+        if (this.checked) {
+            // Regenerate the circle diagram if Play has been clicked
+            if (selectedNames.length > 1) {
+                const circle = randomizeCircle(selectedNames);
+                displayCircle(circle);
+            }
+        } else {
+            canvas.style.display = 'none'; // Hide the canvas if unchecked
+        }
+    });
 
-// Handle changes to the List checkbox
-document.getElementById('outputList').addEventListener('change', function() {
-    const outputDiv = document.getElementById('output');
-    if (this.checked) {
-        // Optionally, you can regenerate the list here if desired
-        // For simplicity, we'll require the user to click "Play" again to regenerate
-    } else {
-        outputDiv.innerHTML = ''; // Clear the list if unchecked
-    }
-});
-
+    // Handle changes to the List checkbox
+    document.getElementById('outputList').addEventListener('change', function() {
+        const outputDiv = document.getElementById('output');
+        if (this.checked) {
+            // Regenerate the list if Play has been clicked
+            if (selectedNames.length > 1) {
+                const circle = randomizeCircle(selectedNames);
+                displayList(circle);
+            }
+        } else {
+            outputDiv.innerHTML = ''; // Clear the list if unchecked
+        }
+    });
 
     // Randomize the circle
     function randomizeCircle(names) {
@@ -349,9 +436,14 @@ document.getElementById('outputList').addEventListener('change', function() {
         const outputDiv = document.getElementById('output');
         outputDiv.innerHTML = '<strong>List of names with followers:</strong><br/><br/>';
         circle.forEach(pair => {
-            outputDiv.innerHTML += `${pair.person} -> ${pair.follower}<br/>`;
+            outputDiv.innerHTML += `${pair.person} → ${pair.follower}<br/>`; // Use a proper arrow
         });
     }
+
+    // Initially disable the Play button until names are loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('generateButton').disabled = allNames.length < 2;
+    });
 </script>
 
 </body>
