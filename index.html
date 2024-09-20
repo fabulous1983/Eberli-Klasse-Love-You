@@ -42,30 +42,13 @@
             transition: transform 0.2s, box-shadow 0.2s; /* Smooth hover effects */
             cursor: pointer; /* Pointer cursor on hover */
             flex: 1; /* Make it flexible */
+            max-width: 150px; /* Set maximum width */
         }
 
         #generateButton:hover {
             transform: scale(1.05); /* Slightly enlarges on hover */
             box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.2); /* Deepen shadow on hover */
             background-color: #1B5E20; /* Even darker green on hover */
-        }
-
-        /* Reset Button Styling */
-        #resetButton {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #9E9E9E; /* Grey color */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            flex: 1; /* Make it flexible */
-        }
-
-        #resetButton:hover {
-            background-color: #757575; /* Darker grey on hover */
-            transform: scale(1.05); /* Slightly enlarge on hover */
         }
 
         /* Unselect All Button Styling */
@@ -79,6 +62,7 @@
             cursor: pointer;
             transition: background-color 0.3s, transform 0.2s;
             flex: 1; /* Make it flexible */
+            max-width: 150px; /* Set maximum width */
         }
 
         #toggleAllButton:hover {
@@ -86,13 +70,31 @@
             transform: scale(1.05); /* Slightly enlarge on hover */
         }
 
-        /* Send Section Hidden (Removed Email and WhatsApp) */
-        /* No changes needed as email and WhatsApp sections are removed */
+        /* Reset Button Styling */
+        #resetButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #9E9E9E; /* Grey color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex: 1; /* Make it flexible */
+            max-width: 150px; /* Set maximum width */
+        }
+
+        #resetButton:hover {
+            background-color: #757575; /* Darker grey on hover */
+        }
 
         .output {
             margin-top: 20px;
             font-size: 18px; /* Match base font size */
             white-space: pre-wrap; /* Preserve newlines */
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .name-grid {
             display: grid;
@@ -130,9 +132,15 @@
             border-radius: 50%;
             font-size: 18px; /* Match base font size */
         }
-        #circleCanvas {
-            margin-top: 20px;
-        }
+     #circleCanvas {
+    margin-top: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+    height: auto;
+}
+
     </style>
 </head>
 <body>
@@ -170,7 +178,7 @@
 <div class="output" id="output"></div>
 
 <!-- Canvas for Circle Diagram -->
-<canvas id="circleCanvas" width="600" height="600" style="display: none;"></canvas>
+<canvas id="circleCanvas" width="600" height="600"></canvas>
 
 <script>
     // Cookie functions
@@ -225,7 +233,7 @@
             grid.appendChild(button);
         });
 
-        document.getElementById('generateButton').disabled = false;
+        document.getElementById('generateButton').disabled = names.length < 2;
     }
 
     // Toggle selection of name
@@ -248,14 +256,16 @@
         const newName = document.getElementById('newName').value.trim();
         if (newName && !allNames.includes(newName)) {
             addedNames.push(newName); // Add to addedNames
-            predefinedNames.push(newName); // Optionally, if you want to treat added names as predefined
-            selectedNames.push(newName);   // Add to selectedNames
+            selectedNames.push(newName); // Add to selectedNames
             allNames = [...predefinedNames, ...addedNames]; // Update allNames
             displayNames(allNames);
             document.getElementById('newName').value = ''; // Clear input field
             setCookie("addedNames", JSON.stringify(addedNames), 365); // Save updated addedNames
-            setCookie("predefinedNames", JSON.stringify(predefinedNames), 365); // Save updated predefinedNames
-            setCookie("selectedNames", JSON.stringify(selectedNames), 365);     // Save updated selectedNames
+            setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save updated selectedNames
+        } else if (allNames.includes(newName)) {
+            alert("This name already exists in the list.");
+        } else {
+            alert("Please enter a valid name.");
         }
     });
 
@@ -269,6 +279,8 @@
             displayNames(allNames);
             setCookie("addedNames", JSON.stringify(addedNames), 365); // Update addedNames cookie
             setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Update selectedNames cookie
+            hideCircle();
+            hideList();
             alert("All newly added names have been removed.");
         }
     });
@@ -276,14 +288,13 @@
     // Toggle Select/Unselect All button
     document.getElementById('toggleAllButton').addEventListener('click', function () {
         const buttons = document.querySelectorAll('.name-button');
-        buttons.forEach(button => {
-            if (selectAll) {
-                button.classList.remove('selected');
-            } else {
-                button.classList.add('selected');
-            }
-        });
-        selectedNames = selectAll ? [] : [...allNames];
+        if (selectAll) {
+            buttons.forEach(button => button.classList.remove('selected'));
+            selectedNames = [];
+        } else {
+            buttons.forEach(button => button.classList.add('selected'));
+            selectedNames = [...allNames];
+        }
         setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save updated selectedNames
         selectAll = !selectAll;
         document.getElementById('toggleAllButton').textContent = selectAll ? 'Unselect All' : 'Select All';
@@ -321,7 +332,7 @@
     document.getElementById('outputCircle').addEventListener('change', function() {
         const canvas = document.getElementById('circleCanvas');
         if (this.checked) {
-            // Regenerate the circle diagram if Play has been clicked
+            // Regenerate the circle diagram if Play has been clicked and sufficient names are selected
             if (selectedNames.length > 1) {
                 const circle = randomizeCircle(selectedNames);
                 displayCircle(circle);
@@ -335,7 +346,7 @@
     document.getElementById('outputList').addEventListener('change', function() {
         const outputDiv = document.getElementById('output');
         if (this.checked) {
-            // Regenerate the list if Play has been clicked
+            // Regenerate the list if Play has been clicked and sufficient names are selected
             if (selectedNames.length > 1) {
                 const circle = randomizeCircle(selectedNames);
                 displayList(circle);
@@ -366,7 +377,7 @@
 
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        const radius = 250; // Circle radius
+        const radius = Math.min(canvas.width, canvas.height) / 2 - 50; // Adjusted for padding
         const circleRadius = 30; // Radius of each name circle
 
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
@@ -404,7 +415,7 @@
         }
 
         circle.forEach((pair, index) => {
-            const angle = index * angleStep;
+            const angle = index * angleStep - Math.PI / 2; // Start from top
             const x = centerX + radius * Math.cos(angle);
             const y = centerY + radius * Math.sin(angle);
             
@@ -422,7 +433,7 @@
             ctx.fillText(pair.person, x, y);
             
             // Draw the connecting arrow to the next name
-            const nextAngle = (index + 1) * angleStep;
+            const nextAngle = (index + 1) * angleStep - Math.PI / 2;
             const nextX = centerX + radius * Math.cos(nextAngle);
             const nextY = centerY + radius * Math.sin(nextAngle);
             
