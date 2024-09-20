@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Circle Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 5px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .output {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .checkbox-container {
+            margin: 20px auto;
+            max-width: 400px;
+        }
+        .checkbox-container label {
+            display: block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Random Circle Generator</h1>
+
+<!-- Input for adding new names -->
+<input type="text" id="newName" placeholder="Add new name">
+<button id="addNameButton">Add Name</button>
+
+<!-- Checkboxes for names -->
+<div class="checkbox-container" id="checkboxContainer"></div>
+
+<button id="generateButton" disabled>Generate Circle</button>
+
+<div class="output" id="output"></div>
+
+<script>
+    // Predefined list of names
+    const predefinedNames = [
+        "Adam", "Akalya", "Andu", "Alvaro", "Anik", "Carlo", "Fabian", "Isadora", 
+        "Jara", "Lars", "Luca", "Malin", "Mark", "Marko", "Matti", "Melisa", 
+        "Nelio", "Nikitas", "Nils", "Nora", "Seth", "Sophie", "Vincent", "Zakaria"
+    ];
+
+    // Load names from cookie if available, otherwise use predefined names
+    let names = getCookie("selectedNames") ? JSON.parse(getCookie("selectedNames")) : predefinedNames;
+
+    // Function to display checkboxes for names
+    function displayCheckboxes(names) {
+        const container = document.getElementById('checkboxContainer');
+        container.innerHTML = ''; // Clear previous content
+
+        names.forEach(name => {
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = name;
+            checkbox.checked = true; // Default all names to be checked
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(name));
+            container.appendChild(label);
+        });
+
+        document.getElementById('generateButton').disabled = false; // Enable the button
+    }
+
+    // Display checkboxes on page load
+    displayCheckboxes(names);
+
+    // Add a new name to the list
+    document.getElementById('addNameButton').addEventListener('click', function () {
+        const newName = document.getElementById('newName').value.trim();
+        if (newName) {
+            names.push(newName);
+            displayCheckboxes(names);
+            document.getElementById('newName').value = ''; // Clear input field
+        }
+    });
+
+    // Generate random circle when the button is clicked
+    document.getElementById('generateButton').addEventListener('click', function () {
+        const selectedNames = Array.from(document.querySelectorAll('#checkboxContainer input[type="checkbox"]:checked'))
+                                  .map(checkbox => checkbox.value);
+        if (selectedNames.length > 1) {
+            const circle = randomizeCircle(selectedNames);
+            displayCircle(circle);
+            setCookie("selectedNames", JSON.stringify(selectedNames), 365); // Save selected names in cookie
+        } else {
+            document.getElementById('output').innerHTML = 'Please select at least 2 names.';
+        }
+    });
+
+    // Randomize the circle
+    function randomizeCircle(names) {
+        const shuffled = [...names];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled.map((name, i) => ({
+            person: name,
+            follower: shuffled[(i + 1) % shuffled.length]
+        }));
+    }
+
+    // Display the random circle
+    function displayCircle(circle) {
+        const outputDiv = document.getElementById('output');
+        outputDiv.innerHTML = '<strong>Circular arrangement of names with followers:</strong><br/><br/>';
+        circle.forEach(pair => {
+            outputDiv.innerHTML += `${pair.person} -> ${pair.follower}<br/>`;
+        });
+    }
+
+    // Cookie functions
+    function setCookie(name, value, days) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + d.toUTCString();
+        document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    }
+
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+</script>
+
+</body>
+</html>
